@@ -11,6 +11,9 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Robbybot {
 
@@ -45,7 +48,18 @@ public class Robbybot {
         return shardManager;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        //Validate .env
+        if (!new File(".env").exists()) {
+            File env = new File(".env");
+            env.createNewFile();
+            FileWriter writer = new FileWriter(env);
+            writer.write("TOKEN=");
+            writer.close();
+            System.out.println("[X] .env was not found so it was created. Please add the token and restart the bot.");
+            System.exit(0);
+        }
+
         try {
             Robbybot bot = new Robbybot();
         } catch (LoginException e) {
