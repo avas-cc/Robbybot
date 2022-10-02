@@ -41,7 +41,6 @@ public class CommandHandler {
 
     // Config commands
     static void HandleMod (SlashCommandInteraction event) {
-        Channel eventChannel = event.getChannel();
         Role addRole = null;
         Role removeRole = null;
         boolean list = false;
