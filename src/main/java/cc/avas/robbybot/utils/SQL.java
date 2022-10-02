@@ -8,7 +8,6 @@ public class SQL {
 
     public void Load () {
         Connect();
-        Logger.log("[+] Connection to [rb.db] has been established.", 1);
         try {
             CreateTables();
             Logger.log("[+] Tables validated.", 1);
@@ -24,6 +23,7 @@ public class SQL {
         try {
             String url = "jdbc:sqlite:.\\data\\rb.db";
             conn = DriverManager.getConnection(url);
+            Logger.log("[+] Connection to [rb.db] has been established.", 1);
         } catch (SQLException e) {
             Logger.log("[-] Failed to connect to rb.db!\n" + e.getMessage(), 1);
         }

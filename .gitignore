@@ -35,4 +35,10 @@ build/
 .vscode/
 
 ### Mac OS ###
+dir_to_ignore/
 .DS_Store
+.idea/**
+classpath/**
+out/.env
+out/data/**
+out/logs/**

@@ -22,13 +22,12 @@ public class Data {
                 Logger.log("[+] config.json successfully created.", 1);
             }
             catch (IOException e) { Logger.log("[-] Failed to build config.json!\n" + e, 1); }
-        } else {
-            try {
-                configData = new ObjectMapper().readTree(new File(".\\data\\config.json"));
-                Logger.log("[+] Config loaded.", 1);
-            }
-            catch (IOException e) {Logger.log("[-] Failed to load config.json!\n" + e, 1); }
         }
+        try {
+            configData = new ObjectMapper().readTree(new File(".\\data\\config.json"));
+            Logger.log("[+] Config loaded.", 1);
+        }
+        catch (IOException e) {Logger.log("[-] Failed to load config.json!\n" + e, 1); }
     }
 
     public void BuildConfig () {
