@@ -1,6 +1,5 @@
 package cc.avas.robbybot.utils;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
@@ -28,11 +27,11 @@ public class Logger {
     }
 
     public static void log (String content, int sub) {
-        Date today = new Date();
-        String todayDate = new SimpleDateFormat("yyyy-MM-dd").format(today);
-        String time = new SimpleDateFormat("HH:mm:ss").format(today);
+        Date date = new Date();
+        String today = new SimpleDateFormat("yyyy-MM-dd").format(date);
+        String time = new SimpleDateFormat("HH:mm:ss").format(date);
 
-        if (!log[0].getName().equals(todayDate + ".log")) Load();
+        if (!log[0].getName().equals(today + ".log")) Load();
 
         String line = "[" + time + "] " + content;
 

@@ -37,7 +37,7 @@ public class Robbybot {
         smb.enableCache(CacheFlag.ROLE_TAGS);
         shardManager = smb.build();
 
-        shardManager.addEventListener(new BotEvent()); //, new ButtonEvent(), new CommandEvent(), new MessageEvent(), new ModalEvent()
+        shardManager.addEventListener(new BotEvent(), new CommandEvent()); //, new ButtonEvent(), new MessageEvent(), new ModalEvent()
     }
 
     public Dotenv getConfig() {
