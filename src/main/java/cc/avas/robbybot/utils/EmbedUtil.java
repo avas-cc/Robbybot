@@ -1,6 +1,8 @@
 package cc.avas.robbybot.utils;
 
+import cc.avas.robbybot.utils.data.Data;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
@@ -43,9 +45,9 @@ public class EmbedUtil {
         channel.sendMessageEmbeds(eb.build()).queue();
     }
 
-//    public void ModLogEmbed (SlashCommandInteraction event, EmbedBuilder eb, boolean good) throws IOException {
-//        if(!good) eb.setColor(Color.RED);
-//        else eb.setColor(Color.GREEN);
-//        try { new GuildConfig().GetModLogChannel(event.getJDA()).sendMessageEmbeds(eb.build()).queue(); } catch (Exception ignored) {}
-//    }
+    public void ModLogEmbed (JDA jda, EmbedBuilder eb, boolean good) {
+        if(!good) eb.setColor(Color.RED);
+        else eb.setColor(Color.GREEN);
+        try { Data.GetModLogChannel(jda).sendMessageEmbeds(eb.build()).queue(); } catch (Exception ignored) {}
+    }
 }

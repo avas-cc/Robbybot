@@ -1,6 +1,7 @@
 package cc.avas.robbybot;
 
-import cc.avas.robbybot.listeners.*;
+import cc.avas.robbybot.utils.listeners.BotEvent;
+import cc.avas.robbybot.utils.listeners.CommandEvent;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -63,7 +64,7 @@ public class Robbybot {
         try {
             Robbybot bot = new Robbybot();
         } catch (LoginException e) {
-            System.out.println(">>ERROR: Invalid token.");
+            System.out.println("[X] Invalid token.");
         }
     }
 }
