@@ -175,7 +175,6 @@ public class MuteHandler {
             if (mute.equals("")) continue;
             String userId = mute.split(";")[0];
             User user = jda.getUserById(userId);
-            Member member = guild.getMember(user);
             long start = Integer.parseInt(mute.split(";")[2]);
             long duration = Integer.parseInt(mute.split(";")[3]);
             long now = Instant.now().getEpochSecond();
@@ -215,5 +214,6 @@ public class MuteHandler {
                 timer.schedule(task, newDuration * 1000L);
             }
         }
+        Logger.log("[+] Loaded " + mutes.size() + " muted players.", 1);
     }
 }
