@@ -3,7 +3,6 @@ package cc.avas.robbybot.moderation;
 import cc.avas.robbybot.utils.EmbedUtil;
 import cc.avas.robbybot.utils.Logger;
 import cc.avas.robbybot.utils.data.Data;
-import cc.avas.robbybot.utils.data.SQL;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -100,7 +99,7 @@ public class MuteHandler {
             public void run() {
                 try {
                     guild.removeRoleFromMember(user, mutedRole).queue();
-                    new SQL().RemoveMute(user);
+                    new MuteSQL().RemoveMute(user);
                     EmbedBuilder modLogEB = new EmbedBuilder()
                             .setTitle("[RB] Unmute")
                             .setDescription(user.getAsMention() + " has been unmuted");
@@ -112,7 +111,7 @@ public class MuteHandler {
         timer.schedule(task, dur * 1000L);
 
         // Add to db
-        new SQL().AddMute(user, reason, Instant.now().getEpochSecond(), dur);
+        new MuteSQL().AddMute(user, reason, Instant.now().getEpochSecond(), dur);
 
         // Respond
         EmbedBuilder eb = new EmbedBuilder()
@@ -152,7 +151,7 @@ public class MuteHandler {
         guild.removeRoleFromMember(mutedUser, mutedRole).queue();
 
         // SQL
-        new SQL().RemoveMute(mutedUser);
+        new MuteSQL().RemoveMute(mutedUser);
         //Respond
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Moderation")
@@ -170,7 +169,7 @@ public class MuteHandler {
         Guild guild = Data.GetGuildPublic(jda);
         Role mutedRole = guild.getRolesByName("Muted", true).get(0);
 
-        List<String> mutes = new SQL().GetMutes();
+        List<String> mutes = new MuteSQL().GetMutes();
         for (String mute : mutes) {
             if (mute.equals("")) continue;
             String userId = mute.split(";")[0];
@@ -185,7 +184,7 @@ public class MuteHandler {
                 guild.removeRoleFromMember(user, mutedRole).queue();
 
                 // SQL
-                new SQL().RemoveMute(user);
+                new MuteSQL().RemoveMute(user);
 
                 // Log in modlog
                 EmbedBuilder modLogEB = new EmbedBuilder()
@@ -202,7 +201,7 @@ public class MuteHandler {
                     public void run() {
                         try {
                             guild.removeRoleFromMember(user, mutedRole).queue();
-                            new SQL().RemoveMute(user);
+                            new MuteSQL().RemoveMute(user);
                             EmbedBuilder modLogEB = new EmbedBuilder()
                                     .setTitle("[RB] Unmute")
                                     .setDescription(user.getAsMention() + " has been unmuted");

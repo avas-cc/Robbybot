@@ -63,27 +63,8 @@ public class SQL {
         stmt.execute(sql);
     }
 
-    public List<String> GetMutes () {
-        List<String> mutes = new ArrayList<>();
-        String sql = "SELECT * FROM mutes;";
-        try {
-            ResultSet rs = conn.prepareStatement(sql).executeQuery();
-            while (rs.next()) {
-                mutes.add(rs.getString("user") + ";" + rs.getString("reason") + ";" + rs.getLong("start") + ";" + rs.getLong("duration"));
-            }
-        } catch (SQLException e) { throw new RuntimeException(e); }
-
-        return mutes;
-    }
-
-    public void AddMute (User user, String reason, long start, long duration) {
-        String sql = "INSERT INTO mutes (user, reason, start, duration) VALUES ('" +user.getId()+"','"+reason+"',"+start+","+duration+");";
-        try { conn.createStatement().execute(sql); } catch (SQLException e) { throw new RuntimeException(e); }
-    }
-
-    public void RemoveMute (User user) {
-        String sql = "DELETE FROM mutes WHERE user=" + user.getId() +";";
-        try { conn.createStatement().execute(sql); } catch (SQLException e) { throw new RuntimeException(e); }
+    public static Connection getConnectionObj () {
+        return conn;
     }
 
     public void GetTickets () {
