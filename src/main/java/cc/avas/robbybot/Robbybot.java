@@ -1,7 +1,6 @@
 package cc.avas.robbybot;
 
-import cc.avas.robbybot.utils.listeners.BotEvent;
-import cc.avas.robbybot.utils.listeners.CommandEvent;
+import cc.avas.robbybot.utils.listeners.*;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -38,7 +37,7 @@ public class Robbybot {
         smb.enableCache(CacheFlag.ROLE_TAGS);
         shardManager = smb.build();
 
-        shardManager.addEventListener(new BotEvent(), new CommandEvent()); //, new ButtonEvent(), new MessageEvent(), new ModalEvent()
+        shardManager.addEventListener(new BotEvent(), new CommandEvent(), new ButtonEvent(), new ModalEvent()); //, new MessageEvent()
     }
 
     public Dotenv getConfig() {

@@ -49,7 +49,7 @@ public class SQL {
 
         sql = """
                 CREATE TABLE IF NOT EXISTS tickets (
-                    id integer PRIMARY KEY,
+                    id integer NOT NULL,
                     title text NOT NULL,
                     category integer NOT NULL,
                     priority integer NOT NULL,
@@ -65,21 +65,5 @@ public class SQL {
 
     public static Connection getConnectionObj () {
         return conn;
-    }
-
-    public void GetTickets () {
-
-    }
-
-    public void AddTicket () {
-
-    }
-
-    public void RemoveTicket() {
-
-    }
-
-    public void SetTicket () {
-
     }
 }

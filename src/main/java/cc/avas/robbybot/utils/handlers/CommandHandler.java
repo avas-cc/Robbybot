@@ -83,12 +83,12 @@ public class CommandHandler {
             case "ticket" -> {
                 if (!i.CheckPermission(event, 2)) return;
                 switch (event.getSubcommandName()) {
-                    case "start" -> TicketHandler.Start(event);
-//                    case "title" -> TicketHandler.SetTitle(event);
-//                    case "claim" -> TicketHandler.Claim(event);
-//                    case "assign" -> TicketHandler.Assign(event);
-//                    case "add" -> TicketHandler.AddUser(event);
-//                    case "remove" -> TicketHandler.RemoveUser(event);
+                    case "start" -> TicketHandler.CreateTicketPanel(event);
+                    case "title" -> TicketHandler.UpdateTitle(event);
+                    case "claim" -> TicketHandler.Claim(event);
+                    case "assign" -> TicketHandler.UpdateAssignee(event);
+                    case "add" -> TicketHandler.AddUser(event);
+                    case "remove" -> TicketHandler.RemoveUser(event);
                 }
             }
             case "config" -> {

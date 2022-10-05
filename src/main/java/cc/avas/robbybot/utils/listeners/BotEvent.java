@@ -1,6 +1,7 @@
 package cc.avas.robbybot.utils.listeners;
 
 import cc.avas.robbybot.moderation.MuteHandler;
+import cc.avas.robbybot.tickets.TicketHandler;
 import cc.avas.robbybot.utils.handlers.CommandHandler;
 import cc.avas.robbybot.utils.data.Data;
 import cc.avas.robbybot.utils.Logger;
@@ -19,7 +20,9 @@ public class BotEvent extends ListenerAdapter {
 
         new Data().Load();
         new SQL().Load();
+
         MuteHandler.Load(event.getJDA());
+        TicketHandler.LoadTickets();
     }
 
     @Override
