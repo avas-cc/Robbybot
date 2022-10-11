@@ -4,11 +4,13 @@ import cc.avas.robbybot.utils.EmbedUtil;
 import cc.avas.robbybot.utils.Logger;
 import cc.avas.robbybot.utils.data.Data;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -29,7 +31,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class TicketBuilder {
-    final static String[] cat = {"In Game", "Discord", "Other", "Private"};
     final static String[] prio = {"QOL", "Low", "Medium", "High", "Immediate"};
     final static String[] stat = {"New", "Scheduled", "In Progress", "Needs Update", "Completed", "Closed"};
     final static String[] catEmoji = {"\uD83C\uDFAE", "\uD83D\uDCAC", "\uD83D\uDCDD", "\uD83D\uDEAB"};
@@ -77,12 +78,12 @@ public class TicketBuilder {
             }
         }
 
-        CreateTicket(event, title, cat, blob);
+        CreateTicket(event.getJDA(), event.getUser(), event.getGuild(), title, cat, blob);
         new EmbedUtil().ReplyEmbed(event, new EmbedBuilder().setDescription("Ticket created"), true, false);
     }
 
-    public static void CreateTicket (ModalInteractionEvent event, String title, int category, String infoBlob) {
-        Guild publicGuild = Data.GetGuildPublic(event.getJDA());
+    public static void CreateTicket (JDA jda, User user, Guild guild, String title, int category, String infoBlob) {
+        Guild publicGuild = Data.GetGuildPublic(jda);
 
         // Set basic ticket data
         Ticket t = new Ticket();
@@ -92,13 +93,13 @@ public class TicketBuilder {
         t.status = 0;
         t.title = title;
         t.lastUpdated = Instant.now().getEpochSecond();
-        t.assigneeId = event.getUser().getId();
+        t.assigneeId = user.getId();
 
-        Logger.log("[t][" + t.id + "] New ticket ID " + t.id + " created by " + event.getUser(), 3);
+        Logger.log("[t][" + t.id + "] New ticket ID " + t.id + " created by " + user, 3);
 
         // Create ticket channel/objects
-        List<Role> modRole = Data.GetModRoles(event.getJDA());
-        ChannelAction<TextChannel> newChannel = publicGuild.createTextChannel(catEmoji[t.category] + "-ticket-" + t.id, event.getGuild().getCategoriesByName("Tickets", true).get(0))
+        List<Role> modRole = Data.GetModRoles(jda);
+        ChannelAction<TextChannel> newChannel = publicGuild.createTextChannel(catEmoji[t.category] + "-ticket-" + t.id, guild.getCategoriesByName("Tickets", true).get(0))
                 .addPermissionOverride(publicGuild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL));
         for(Role role : modRole) newChannel.addRolePermissionOverride(role.getIdLong(), EnumSet.of(Permission.VIEW_CHANNEL), null);
         CompletableFuture<?> future = CompletableFuture.allOf(newChannel.submit());
@@ -132,7 +133,7 @@ public class TicketBuilder {
                 .setTitle(catEmoji[t.category] + " " + t.id + ": " + t.title)
                 .addField("   Priority   ", prio[t.priority], true)
                 .addField("   Status   ", stat[t.status], true)
-                .addField(" Assignee ", event.getJDA().getUserById(t.assigneeId).getName(), false)
+                .addField(" Assignee ", jda.getUserById(t.assigneeId).getName(), false)
                 .setColor(Color.CYAN);
 
         String _title = t.title;
@@ -142,7 +143,7 @@ public class TicketBuilder {
                 .setTitle(catEmoji[t.category] + " " + t.id + ": " + _title)
                 .addField("   Priority ", prio[t.priority], true)
                 .addField(" Status ", stat[t.status], true)
-                .addField(" Assignee ", event.getJDA().getUserById(t.assigneeId).getName(), true)
+                .addField(" Assignee ", jda.getUserById(t.assigneeId).getName(), true)
                 .addField(" Updated ", new Date(t.lastUpdated*1000).toString(), true)
                 .setColor(Color.CYAN);
         MessageAction action0 = ticketChannel.sendMessageEmbeds(infoEB.build());
