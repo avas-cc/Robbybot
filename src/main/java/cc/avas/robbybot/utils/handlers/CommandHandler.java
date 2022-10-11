@@ -1,6 +1,7 @@
 package cc.avas.robbybot.utils.handlers;
 
 import cc.avas.robbybot.moderation.MuteHandler;
+import cc.avas.robbybot.polls.PollHandler;
 import cc.avas.robbybot.tickets.TicketHandler;
 import cc.avas.robbybot.utils.EmbedUtil;
 import cc.avas.robbybot.utils.Logger;
@@ -9,6 +10,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -72,6 +74,11 @@ public class CommandHandler {
         commandData.add(Commands.slash("unmute", "Unmute a user")
                 .addOption(OptionType.USER, "user", "User to unmute", true));
 
+        // poll
+        commandData.add(Commands.slash("poll", "Create a poll")
+                .addOption(OptionType.STRING, "question", "Poll question", true)
+                .addOption(OptionType.STRING, "responses", "Separate with `;`. Omit for YES/NO. "));
+
 
         jda.updateCommands().addCommands(commandData).queue();
         System.out.println("[Robbybot] [+] Registered " + commandData.toArray().length + " commands to " + jda.getGuilds());
@@ -111,6 +118,12 @@ public class CommandHandler {
             case "unmute" -> {
                 if (!i.CheckPermission(event, 1)) return;
                 MuteHandler.Unmute(event);
+            }
+
+            // Other
+            case "poll" -> {
+                if(!i.CheckPermission(event, 1)) return;
+                PollHandler.Handle(event);
             }
         }
     }
@@ -230,15 +243,6 @@ public class CommandHandler {
         }
     }
 
-    static void HandleDebug (SlashCommandInteraction event) {
-        Data.SetDebug(!Data.GetDebug());
-        EmbedBuilder eb = new EmbedBuilder()
-                .setTitle("[RB] Admin")
-                .setDescription("Set config.debug to `" + Data.GetDebug() + "`");
-        new EmbedUtil().ReplyEmbed(event, eb, true, false);
-        Logger.log("[+] DEBUG set to [" + Data.GetDebug() + "].", 1);
-    }
-
     static void HandlePollConfig (SlashCommandInteraction event) {
         Role role = null;
         TextChannel channel = null;
@@ -266,5 +270,14 @@ public class CommandHandler {
                     .setDescription("Failed to update poll config!");
             new EmbedUtil().ReplyEmbed(event, eb, true, true);
         }
+    }
+
+    static void HandleDebug (SlashCommandInteraction event) {
+        Data.SetDebug(!Data.GetDebug());
+        EmbedBuilder eb = new EmbedBuilder()
+                .setTitle("[RB] Admin")
+                .setDescription("Set config.debug to `" + Data.GetDebug() + "`");
+        new EmbedUtil().ReplyEmbed(event, eb, true, false);
+        Logger.log("[+] DEBUG set to [" + Data.GetDebug() + "].", 1);
     }
 }
