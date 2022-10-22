@@ -61,6 +61,16 @@ public class SQL {
                     trackerEmbedId text
                 );""";
         stmt.execute(sql);
+
+        sql = """
+                CREATE TABLE IF NOT EXISTS reminders (
+                    id integer PRIMARY KEY,
+                    userId text NOT NULL,
+                    content text NOT NULL,
+                    start long NOT NULL,
+                    duration long NOT NULL
+                );""";
+        stmt.execute(sql);
     }
 
     public static Connection getConnectionObj () {

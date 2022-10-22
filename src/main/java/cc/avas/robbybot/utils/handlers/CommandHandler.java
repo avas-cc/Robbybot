@@ -1,5 +1,6 @@
 package cc.avas.robbybot.utils.handlers;
 
+import cc.avas.robbybot.general.RemindmeHandler;
 import cc.avas.robbybot.moderation.MuteHandler;
 import cc.avas.robbybot.polls.PollHandler;
 import cc.avas.robbybot.tickets.TicketHandler;
@@ -61,7 +62,8 @@ public class CommandHandler {
                 .addSubcommands(new SubcommandData("remove", "Remove user from the ticket")
                         .addOption(OptionType.USER, "user", "Remove user from the ticket", true)));
 
-        // mod commands
+        // Mod commands
+        // mute
         commandData.add(Commands.slash("mute", "Mute a user")
                 .addOption(OptionType.USER, "user", "User to mute", true)
                 .addOption(OptionType.STRING, "reason", "Reason for the mute", true)
@@ -71,6 +73,8 @@ public class CommandHandler {
                         .addChoice("m", "m")
                         .addChoice("h", "h")
                         .addChoice("d", "d")));
+
+        // unmute
         commandData.add(Commands.slash("unmute", "Unmute a user")
                 .addOption(OptionType.USER, "user", "User to unmute", true));
 
@@ -78,6 +82,17 @@ public class CommandHandler {
         commandData.add(Commands.slash("poll", "Create a poll")
                 .addOption(OptionType.STRING, "question", "Poll question", true)
                 .addOption(OptionType.STRING, "responses", "Separate with `;`. Omit for YES/NO. "));
+
+        // General
+        // remindme
+        commandData.add(Commands.slash("remindme", "Set a reminder")
+                .addOption(OptionType.STRING, "content", "What do you need reminding?", true)
+                .addOption(OptionType.INTEGER, "duration", "of time", true)
+                .addOptions(new OptionData(OptionType.STRING, "unit", "of time", true)
+                        .addChoice("s", "s")
+                        .addChoice("m", "m")
+                        .addChoice("h", "h")
+                        .addChoice("d", "d")));
 
 
         jda.updateCommands().addCommands(commandData).queue();
@@ -119,12 +134,13 @@ public class CommandHandler {
                 if (!i.CheckPermission(event, 1)) return;
                 MuteHandler.Unmute(event);
             }
-
-            // Other
             case "poll" -> {
                 if(!i.CheckPermission(event, 1)) return;
                 PollHandler.Handle(event);
             }
+
+            // General
+            case "remindme" -> RemindmeHandler.RemindMe(event);
         }
     }
 
