@@ -1,5 +1,6 @@
 package cc.avas.robbybot.utils.handlers;
 
+import cc.avas.robbybot.avas.AVASCommandHandler;
 import cc.avas.robbybot.general.RemindmeHandler;
 import cc.avas.robbybot.moderation.MuteHandler;
 import cc.avas.robbybot.polls.PollHandler;
@@ -94,6 +95,10 @@ public class CommandHandler {
                         .addChoice("h", "h")
                         .addChoice("d", "d")));
 
+        // AVAS
+        commandData.add(Commands.slash("stats", "Get a player's stats")
+                .addOption(OptionType.STRING, "player-name", "The player you want to search", true));
+
 
         jda.updateCommands().addCommands(commandData).queue();
         System.out.println("[Robbybot] [+] Registered " + commandData.toArray().length + " commands to " + jda.getGuilds());
@@ -141,6 +146,9 @@ public class CommandHandler {
 
             // General
             case "remindme" -> RemindmeHandler.RemindMe(event);
+
+            // AVAS
+            case "stats" -> AVASCommandHandler.Stats(event);
         }
     }
 
