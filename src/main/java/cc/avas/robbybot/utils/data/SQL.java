@@ -27,7 +27,7 @@ public class SQL {
 
     public void Connect () {
         try {
-            String url = "jdbc:sqlite:.\\data\\rb.db";
+            String url = "jdbc:sqlite:./data/rb.db";
             conn = DriverManager.getConnection(url);
             Logger.log("[+] Connection to [rb.db] has been established.", 1);
         } catch (SQLException e) {

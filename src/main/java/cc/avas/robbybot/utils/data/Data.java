@@ -13,11 +13,11 @@ import java.util.ArrayList;
 
 public class Data {
     private static Config config = new Config();
-    final static File configFile = new File(".\\data\\config.json");
+    final static File configFile = new File("./data/config.json");
 
     public void Load () {
         //Validate path
-        new File(".\\data").mkdir();
+        new File("./data").mkdir();
 
         //Create config.json if needed
         if (!configFile.exists()) {
