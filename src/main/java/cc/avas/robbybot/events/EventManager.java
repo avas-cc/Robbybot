@@ -10,6 +10,10 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Map;
 
 public class EventManager {
@@ -24,11 +28,15 @@ public class EventManager {
         long end;
         boolean voting;
 
-        public Event(int event, int duration) {
+        public Event(int event, long endTimestamp) {
             this.event = event;
-            this.start = System.currentTimeMillis();
-            this.end = start + (duration * 86400000L);
+            this.end = endTimestamp;
             this.voting = false;
+
+            LocalDateTime dateTime = LocalDateTime.now();
+            ZoneId zoneId = ZoneId.of("America/Chicago");
+            ZonedDateTime zonedDateTime = dateTime.atZone(zoneId);
+            this.start = zonedDateTime.toInstant().toEpochMilli();
         }
 
         public int getEvent() { return this.event; }
@@ -69,7 +77,6 @@ public class EventManager {
                 }
 
                 String eventName;
-                int duration;
 
                 try { eventName = event.getOption("event").getAsString(); }
                 catch (Exception e) {
@@ -80,19 +87,41 @@ public class EventManager {
                     return;
                 }
 
-                try { duration = event.getOption("duration").getAsInt(); }
-                catch (Exception e) { duration = 0; }
+                long endTimestamp = 0L;
+                try {
+                    String end = event.getOption("end-time").getAsString();
 
-                startEvent(event, eventIDs.get(eventName), duration);
+                    // Define the DateTimeFormatter with the correct pattern and set the year to the current year
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                            .appendPattern("MM-dd HH:mm")
+                            .parseDefaulting(ChronoField.YEAR, Year.now().getValue())
+                            .toFormatter();
+
+                    // Parse the datetime string to LocalDateTime
+                    LocalDateTime dateTime = LocalDateTime.parse(end, formatter);
+
+                    // Specify the time zone as Central Standard Time (CST)
+                    ZoneId zoneId = ZoneId.of("America/Chicago");
+
+                    // Convert LocalDateTime to ZonedDateTime with the specified time zone
+                    ZonedDateTime zonedDateTime = dateTime.atZone(zoneId);
+
+                    endTimestamp = zonedDateTime.toInstant().toEpochMilli();
+                }
+                catch (Exception e) {
+                    System.out.println(e);
+                }
+
+                startEvent(event, eventIDs.get(eventName), endTimestamp);
             }
 
             case "stop" -> stopEvent(event);
         }
     }
 
-    public static void startEvent(SlashCommandInteraction event, int eventID, int duration) {
+    public static void startEvent(SlashCommandInteraction event, int eventID, long endTimestamp) {
         switch (eventID) {
-            case 1 -> MACManager.startEvent(event, duration);
+            case 1 -> MACManager.startEvent(event, endTimestamp);
         }
     }
 
@@ -103,9 +132,23 @@ public class EventManager {
     }
 
     public static void stopEvent(SlashCommandInteraction event) {
+        if (runningEvent == null) {
+            EmbedBuilder eb = new EmbedBuilder()
+                    .setTitle("[RB] Event Manager")
+                    .setDescription("No event running!");
+            new EmbedUtil().ReplyEmbed(event, eb, true, true);
+            return;
+        }
+
         switch (runningEvent.getEvent()) {
             case 1 -> {
-                try { MACManager.stopEvent(event.getJDA()); }
+                try {
+                    MACManager.stopEvent(event.getJDA());
+                    EmbedBuilder eb = new EmbedBuilder()
+                            .setTitle("[RB] Event Manager")
+                            .setDescription("Stopping event - might take a minute..");
+                    new EmbedUtil().ReplyEmbed(event, eb, true, true);
+                }
                 catch (Exception e) {
                     EmbedBuilder eb = new EmbedBuilder()
                             .setTitle("[RB] Event Manager")

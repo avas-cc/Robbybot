@@ -19,21 +19,21 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Component;
 import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import org.w3c.dom.Text;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 public class MACManager {
 
@@ -69,9 +69,9 @@ public class MACManager {
         public void removeVote() { votes--; }
     }
 
-    public static void startEvent(SlashCommandInteraction event, int duration) {
+    public static void startEvent(SlashCommandInteraction event, long endTimestamp) {
         // Get event info
-        Modal modal = Modal.create("events-1-start-" + duration, "Mapart Contest Creation")
+        Modal modal = Modal.create("events-1-start-" + endTimestamp, "Mapart Contest Creation")
                 .addActionRow(TextInput.create("theme", "Theme", TextInputStyle.SHORT).setRequired(true).build())
                 .addActionRow(TextInput.create("rules", "Rules", TextInputStyle.PARAGRAPH).setRequired(true).build())
                 .build();
@@ -83,10 +83,12 @@ public class MACManager {
         JDA jda = event.getJDA();
 
         int eventID = Integer.parseInt(event.getModalId().split("-")[1]);
-        int duration = Integer.parseInt(event.getModalId().split("-")[3]);
+        long endTimestamp = Long.parseLong(event.getModalId().split("-")[3]);
 
-        Event newEvent = new Event(eventID, duration);
+        Event newEvent = new Event(eventID, endTimestamp);
         EventManager.runningEvent = newEvent;
+
+        System.out.println("Start: " + newEvent.getStart() + "\nEnd: " + newEvent.getEnd());
 
         // Private submissions channel
         Guild guild = Data.getGuild(jda);
@@ -105,26 +107,25 @@ public class MACManager {
         // Post instructions embed to events channel
         String theme = event.getInteraction().getValue("theme").getAsString();
         String rules = event.getInteraction().getValue("rules").getAsString();
-        long end = newEvent.getEnd();
 
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Mapart Contest")
                 .setDescription("Starting event! This might take a second..");
         new EmbedUtil().ReplyEmbed(event, eb, true, false);
 
-        buildEventInfoEmbed(eventsChannel, end, theme, rules);
+        buildEventInfoEmbed(eventsChannel, theme, rules);
     }
 
-    static void clearEventsChannel (TextChannel eventsChannel) throws RuntimeException {
+    static void clearChannel(TextChannel channel) throws RuntimeException {
         CountDownLatch latch = new CountDownLatch(1);
         while (true) {
             try {
-                if (eventsChannel.getHistoryFromBeginning(7).submit().get().size() == 0) break;
+                if (channel.getHistoryFromBeginning(7).submit().get().size() == 0) break;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
 
-            eventsChannel.getHistory().retrievePast(1).queue(messages -> {
+            channel.getHistory().retrievePast(1).queue(messages -> {
                 int messageCount = messages.size();
                 CountDownLatch deleteLatch = new CountDownLatch(messageCount);
 
@@ -146,28 +147,18 @@ public class MACManager {
         catch (InterruptedException e) { e.printStackTrace(); }
     }
 
-    static void buildEventInfoEmbed(TextChannel eventsChannel, long end, String theme, String rules) {
-        clearEventsChannel(eventsChannel);
+    static void buildEventInfoEmbed(TextChannel eventsChannel, String theme, String rules) {
+        clearChannel(eventsChannel);
 
         Event event = EventManager.runningEvent;
 
-        long now = System.currentTimeMillis();
         String dur;
-        if (event.getStart() == event.getEnd()) dur = "Indefinite";
-        else {
-            long delta = (end - now);
-
-            if (delta <= 0) {
-                startVoting(eventsChannel.getJDA());
-                return;
-            }
-
-            dur = String.format("%02d:%02d", TimeUnit.MILLISECONDS.toHours(delta), TimeUnit.MILLISECONDS.toMinutes(delta) % 60);
-        }
+        if (event.getEnd() == 0L) dur = "Indefinite";
+        else dur = "<t:" + event.getEnd()/1000 + ":R>";
 
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Mapart Contest Information")
-                .setDescription(String.format("**Theme:** %s\n**Time Remaining:** %s\n\n**Submission Rules:**\n%s\n\n**Voting Rules:**\n- 1 vote per user (can be changed at any time)\n- Must have joined the Discord before event announcement\nVote in #submissions when voting is opened!\n\n**How to submit:**\nUse **/submit**, include a screenshot and a title!", theme, dur, rules));
+                .setDescription(String.format("**Theme:** %s\n**Submission deadline:** %s\n\n**Submission Rules:**\n%s\n\n**Voting Rules:**\n- 1 vote per user (can be changed at any time)\n- Must have joined the Discord before event announcement\nVote in #submissions when voting is opened!\n\n**How to submit:**\nUse **/submit**, include a screenshot and a title!", theme, dur, rules));
 
         MessageAction action = eventsChannel.sendMessageEmbeds(eb.build());
         action.submit().whenComplete((v, error) -> {
@@ -175,20 +166,29 @@ public class MACManager {
         });
 
         if (!dur.equals("Indefinite")) {
-            FutureTask<Void> timeRemainingTask = new FutureTask<>(() -> eventTimeRemainingTimer(eventsChannel, end, theme, rules), null);
+            FutureTask<Void> timeRemainingTask = new FutureTask<>(() -> submissionPeriodTimer(eventsChannel.getJDA()), null);
             new Thread(timeRemainingTask).start();
         }
     }
 
-    static Timer infoEmbedUpdateTimer = new Timer();
-    static void eventTimeRemainingTimer(TextChannel eventsChannel, long end, String theme, String rules) {
+    static Timer submissionPeriodTimer = new Timer();
+    static void submissionPeriodTimer(JDA jda) {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                buildEventInfoEmbed(eventsChannel, end, theme, rules);
+                startVoting(jda);
             }
         };
-        infoEmbedUpdateTimer.schedule(task, 60000L);
+
+        LocalDateTime dateTime = LocalDateTime.now();
+        ZoneId zoneId = ZoneId.of("America/Chicago");
+        ZonedDateTime zonedDateTime = dateTime.atZone(zoneId);
+        long start = zonedDateTime.toInstant().toEpochMilli();
+
+        start = System.currentTimeMillis();
+
+        System.out.println("Starting timer: " + (EventManager.runningEvent.getEnd() - start));
+        submissionPeriodTimer.schedule(task, EventManager.runningEvent.getEnd() - start);
     }
 
     public static void addEntry (SlashCommandInteraction event) {
@@ -297,7 +297,7 @@ public class MACManager {
         EventManager.runningEvent.setVoting(true);
         TextChannel eventsChannel = Data.getEventChannel(jda);
 
-        clearEventsChannel(eventsChannel);
+        clearChannel(eventsChannel);
 
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Mapart Contest Information")
@@ -337,6 +337,10 @@ public class MACManager {
     public static void stopEvent(JDA jda) throws ExecutionException, InterruptedException {
         EventManager.runningEvent = null;
 
+        if (entries.size() == 0) {
+            clearChannel(Data.getEventChannel(jda));
+            return;
+        }
         // get winners
         entries.sort((o1, o2) -> Integer.compare(o2.getVotes(), o1.getVotes()));
         List<Entry> winners = new ArrayList<>(entries.subList(0, Math.min(3, entries.size())));
@@ -378,7 +382,7 @@ public class MACManager {
         // announce winners in events channel
         TextChannel eventsChannel = Data.getEventChannel(jda);
 
-        clearEventsChannel(eventsChannel);
+        clearChannel(eventsChannel);
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Mapart Contest Winners")
                 .setDescription("Congratulations to the following players!");
@@ -394,6 +398,8 @@ public class MACManager {
             eventsChannel.sendMessage(winner.getImageURL()).queue();
             i++;
         }
+
+        clearChannel(Data.getSubmissionsChannel(jda));
     }
 
     static Entry getEntryByMessage(long messageID) {

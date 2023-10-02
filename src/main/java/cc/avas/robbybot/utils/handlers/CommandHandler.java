@@ -76,7 +76,7 @@ public class CommandHandler {
                 .addOptions(new OptionData(OptionType.STRING, "event", "Which event to manage")
                         .addChoice("mapart-contest", "mapart contest")
                         .addChoice("voting", "voting"))
-                .addOption(OptionType.INTEGER, "duration", "Duration of event in DAYS"));
+                .addOption(OptionType.STRING, "end-time", "Format: MM-DD HH:MM (ie. midnight Jan 1 = 01-01 23:59)"));
 
         // General
         // remindme
