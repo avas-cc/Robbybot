@@ -8,6 +8,6 @@ import org.jetbrains.annotations.NotNull;
 public class ModalEvent extends ListenerAdapter {
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
-        ModalHandler.Handle(event);
+        ModalHandler.handle(event);
     }
 }

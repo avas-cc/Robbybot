@@ -1,10 +1,9 @@
 package cc.avas.robbybot.utils.handlers;
 
-import cc.avas.robbybot.avas.AVASCommandHandler;
+import cc.avas.robbybot.events.EventManager;
 import cc.avas.robbybot.general.RemindmeHandler;
 import cc.avas.robbybot.moderation.MuteHandler;
 import cc.avas.robbybot.polls.PollHandler;
-import cc.avas.robbybot.tickets.TicketHandler;
 import cc.avas.robbybot.utils.EmbedUtil;
 import cc.avas.robbybot.utils.Logger;
 import cc.avas.robbybot.utils.data.Data;
@@ -12,7 +11,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -32,13 +30,7 @@ public class CommandHandler {
         // Admin commands
         // config
         commandData.add(Commands.slash("config", "Configure channels, roles and stuff for the bot")
-                .addSubcommands(new SubcommandData("guild", "Set public and private guilds")
-                        .addOptions(new OptionData(OptionType.STRING, "set", "Set public/private guild", true)
-                                .addChoice("public", "public")
-                                .addChoice("private", "private")))
-                .addSubcommands(new SubcommandData("data", "Set public and private data channels")
-                        .addOption(OptionType.CHANNEL, "public", "Set public data channel")
-                        .addOption(OptionType.CHANNEL, "private", "Set private data channel"))
+                .addSubcommands(new SubcommandData("guild", "Set this guild ID"))
                 .addSubcommands(new SubcommandData("mod-roles", "Configure mod stuff")
                         .addOption(OptionType.ROLE, "add", "Add role to the mod role list")
                         .addOption(OptionType.ROLE, "remove", "Remove role from the mod role list")
@@ -48,20 +40,12 @@ public class CommandHandler {
                 .addSubcommands(new SubcommandData("poll", "Configure poll role and channel")
                         .addOption(OptionType.ROLE, "role", "Role to ping when poles are made")
                         .addOption(OptionType.CHANNEL, "channel", "Channel to make new polls in"))
+                .addSubcommands(new SubcommandData("events", "Configure poll role and channel")
+                        .addOption(OptionType.CHANNEL, "events-channel", "Channel to display event info in")
+                        .addOption(OptionType.CHANNEL, "submissions-channel", "Channel to send submissions to")
+                        .addOption(OptionType.CHANNEL, "leaderboards-channel", "Channel to hold event winners")
+                        .addOption(OptionType.CHANNEL, "maparts-channel", "Channel to send maparts to from mapart contests"))
                 .addSubcommands(new SubcommandData("debug", "Toggle debugging mode")));
-
-        // ticket
-        commandData.add(Commands.slash("ticket", "Start ticket service in current channel")
-                .addSubcommands(new SubcommandData("start", "Start ticket service in current channel"))
-                .addSubcommands(new SubcommandData("title", "Brief description of the ticket")
-                        .addOption(OptionType.STRING, "title", "Brief description of the ticket", true))
-                .addSubcommands(new SubcommandData("assign", "Assign ticket to a user")
-                        .addOption(OptionType.USER, "user", "User to assign to the ticket", true))
-                .addSubcommands(new SubcommandData("claim", "Assign ticket to yourself"))
-                .addSubcommands(new SubcommandData("add", "Add user to the ticket")
-                        .addOption(OptionType.USER, "user", "Add user to the ticket", true))
-                .addSubcommands(new SubcommandData("remove", "Remove user from the ticket")
-                        .addOption(OptionType.USER, "user", "Remove user from the ticket", true)));
 
         // Mod commands
         // mute
@@ -84,6 +68,16 @@ public class CommandHandler {
                 .addOption(OptionType.STRING, "question", "Poll question", true)
                 .addOption(OptionType.STRING, "responses", "Separate with `;`. Omit for YES/NO. "));
 
+        // events
+        commandData.add(Commands.slash("event", "Manage event stuff")
+                .addOptions(new OptionData(OptionType.STRING, "action", "Start/stop an event. Use /event start voting to stop submissions!", true)
+                        .addChoice("start", "start")
+                        .addChoice("stop", "stop"))
+                .addOptions(new OptionData(OptionType.STRING, "event", "Which event to manage")
+                        .addChoice("mapart-contest", "mapart contest")
+                        .addChoice("voting", "voting"))
+                .addOption(OptionType.INTEGER, "duration", "Duration of event in DAYS"));
+
         // General
         // remindme
         commandData.add(Commands.slash("remindme", "Set a reminder")
@@ -95,9 +89,10 @@ public class CommandHandler {
                         .addChoice("h", "h")
                         .addChoice("d", "d")));
 
-        // AVAS
-        commandData.add(Commands.slash("stats", "Get a player's stats")
-                .addOption(OptionType.STRING, "player-name", "The player you want to search", true));
+        // submit
+        commandData.add(Commands.slash("submit", "Submit your entry for an event!")
+                .addOption(OptionType.ATTACHMENT, "attachment", "Attach an image of your entry!", true)
+                .addOption(OptionType.STRING, "title", "Give your submission a title!", true));
 
 
         jda.updateCommands().addCommands(commandData).queue();
@@ -107,25 +102,14 @@ public class CommandHandler {
     public static void Handle(SlashCommandInteraction event) throws IOException, ExecutionException, InterruptedException {
         switch (event.getName()) {
             // Admin commands
-            case "ticket" -> {
-                if (!i.CheckPermission(event, 2)) return;
-                switch (event.getSubcommandName()) {
-                    case "start" -> TicketHandler.CreateTicketPanel(event);
-                    case "title" -> TicketHandler.UpdateTitle(event);
-                    case "claim" -> TicketHandler.Claim(event);
-                    case "assign" -> TicketHandler.UpdateAssignee(event);
-                    case "add" -> TicketHandler.AddUser(event);
-                    case "remove" -> TicketHandler.RemoveUser(event);
-                }
-            }
             case "config" -> {
                 if (!i.CheckPermission(event, 2)) return;
                 switch (event.getSubcommandName()) {
                     case "guild" -> HandleGuild(event);
                     case "mod-roles" -> HandleModRoles(event);
                     case "mod-log" -> HandleModLog(event);
-                    case "data" -> HandleDataChannels(event);
                     case "poll" -> HandlePollConfig(event);
+                    case "events" -> handleEventConfig(event);
                     case "debug" -> HandleDebug(event);
                 }
             }
@@ -144,37 +128,20 @@ public class CommandHandler {
                 PollHandler.Handle(event);
             }
 
+            case "event" -> {
+                if(!i.CheckPermission(event, 1)) return;
+                EventManager.handle(event);
+            }
+
             // General
             case "remindme" -> RemindmeHandler.RemindMe(event);
-
-            // AVAS
-            case "stats" -> AVASCommandHandler.Stats(event);
+            case "submit" -> EventManager.submit(event);
         }
     }
 
     // Config commands
     static void HandleGuild (SlashCommandInteraction event) {
-        String guild = event.getOption("set").getAsString();
-        if (guild.equals("public")) {
-            Data.SetGuildPublic(event.getGuild());
-            Logger.log("[+] Public guild updated to [" + event.getGuild().getName() + "].", 1);
-        }
-        else if (guild.equals("private")) {
-            Data.SetGuildPrivate(event.getGuild());
-            Logger.log("[+] Private guild updated to [" + event.getGuild().getName() + "].", 1);
-        }
-        else {
-            EmbedBuilder eb = new EmbedBuilder()
-                    .setTitle("[RB] Admin")
-                    .setDescription("Invalid syntax! Please use \"public\" or \"private\".");
-            new EmbedUtil().ReplyEmbed(event, eb, true, true);
-            return;
-        }
-        EmbedBuilder eb = new EmbedBuilder()
-                .setTitle("[RB] Admin")
-                .setDescription("Guilds updated.");
-        new EmbedUtil().ReplyEmbed(event, eb, true, false);
-
+        Data.setGuildID(event.getGuild());
     }
 
     static void HandleModRoles (SlashCommandInteraction event) {
@@ -186,7 +153,7 @@ public class CommandHandler {
         try { list = event.getOption("list").getAsBoolean(); } catch (Exception ignored) {}
 
         if (addRole != null) {
-            ArrayList<Role> modRoles = Data.GetModRoles(event.getJDA());
+            ArrayList<Role> modRoles = Data.getModRoles(event.getJDA());
             if (modRoles.contains(addRole)) {
                 EmbedBuilder eb = new EmbedBuilder()
                         .setTitle("[RB] Admin")
@@ -194,16 +161,16 @@ public class CommandHandler {
                 new EmbedUtil().SendEmbed(event.getTextChannel(), eb, true);
             } else {
                 modRoles.add(addRole);
-                Data.SetModRole(modRoles);
+                Data.setModRole(modRoles);
                 Logger.log("[+] Role [" + addRole.getName() + "] added to mod roles list.", 1);
             }
         }
 
         if (removeRole != null) {
-            ArrayList<Role> modRoles = Data.GetModRoles(event.getJDA());
+            ArrayList<Role> modRoles = Data.getModRoles(event.getJDA());
             if (modRoles.contains(removeRole)) {
                 modRoles.remove(removeRole);
-                Data.SetModRole(modRoles);
+                Data.setModRole(modRoles);
                 Logger.log("[+] Role [" + removeRole.getName() + "] removed from mod roles list.", 1);
             } else {
                 EmbedBuilder eb = new EmbedBuilder()
@@ -215,7 +182,7 @@ public class CommandHandler {
 
         if (list) {
             String blob = "";
-            for (Role role : Data.GetModRoles(event.getJDA())) blob += role.getName() + "\n";
+            for (Role role : Data.getModRoles(event.getJDA())) blob += role.getName() + "\n";
             EmbedBuilder eb = new EmbedBuilder()
                     .setTitle("[RB] Admin")
                     .setDescription("**Moderator roles:**\n" + blob);
@@ -230,41 +197,12 @@ public class CommandHandler {
 
     static void HandleModLog (SlashCommandInteraction event) {
         TextChannel channel = event.getOption("channel").getAsTextChannel();
-        Data.SetModLogChannel(channel);
+        Data.setModLogChannel(channel);
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Admin")
                 .setDescription("Set mod log to **" + channel.getName() + "**");
         new EmbedUtil().ReplyEmbed(event, eb, true, false);
         Logger.log("[+] Channel [" + channel.getName() + "] set as mod log.", 1);
-    }
-
-    static void HandleDataChannels (SlashCommandInteraction event) {
-        TextChannel pub = null;
-        TextChannel priv = null;
-
-        try { pub = event.getOption("public").getAsTextChannel(); } catch (Exception ignored) {}
-        try { priv = event.getOption("private").getAsTextChannel(); } catch (Exception ignored) {}
-
-        if (pub != null) {
-            Data.SetDataPublicChannel(pub);
-            Logger.log("[+] Channel [" + pub.getName() + "] set as public data channel.", 1);
-        }
-        if (priv != null) {
-            Data.SetDataPrivateChannel(priv);
-            Logger.log("[+] Channel [" + priv.getName() + "] set as private data channel.", 1);
-        }
-
-        if (pub != null || priv != null) {
-            EmbedBuilder eb = new EmbedBuilder()
-                    .setTitle("[RB] Admin")
-                    .setDescription("Data channels updated.");
-            new EmbedUtil().ReplyEmbed(event, eb, true, false);
-        } else {
-            EmbedBuilder eb = new EmbedBuilder()
-                    .setTitle("[RB] Admin")
-                    .setDescription("Failed to update data channels!");
-            new EmbedUtil().ReplyEmbed(event, eb, true, true);
-        }
     }
 
     static void HandlePollConfig (SlashCommandInteraction event) {
@@ -275,11 +213,11 @@ public class CommandHandler {
         try { channel = event.getOption("channel").getAsTextChannel(); } catch (Exception ignored) {}
 
         if (role != null) {
-            Data.SetPollRole(role);
+            Data.setPollRole(role);
             Logger.log("[+] Role [" + role.getName() + "] set as poll role.", 1);
         }
         if (channel != null) {
-            Data.SetPollChannel(channel);
+            Data.setPollChannel(channel);
             Logger.log("[+] Channel [" + channel.getName() + "] set as poll channel.", 1);
         }
 
@@ -296,12 +234,53 @@ public class CommandHandler {
         }
     }
 
+    static void handleEventConfig (SlashCommandInteraction event) {
+        TextChannel eventChannel = null;
+        TextChannel lbChannel = null;
+        TextChannel subChannel = null;
+        TextChannel mapartChannel = null;
+
+        try { eventChannel = event.getOption("events-channel").getAsTextChannel(); } catch (Exception ignored) {}
+        try { lbChannel = event.getOption("leaderboards-channel").getAsTextChannel(); } catch (Exception ignored) {}
+        try { subChannel = event.getOption("submissions-channel").getAsTextChannel(); } catch (Exception ignored) {}
+        try { mapartChannel = event.getOption("maparts-channel").getAsTextChannel(); } catch (Exception ignored) {}
+
+        if (eventChannel != null) {
+            Data.setEventsChannel(eventChannel);
+            Logger.log("[+] Channel [" + eventChannel.getName() + "] set as events channel.", 1);
+        }
+        if (lbChannel != null) {
+            Data.setLeaderboardsChannel(lbChannel);
+            Logger.log("[+] Channel [" + lbChannel.getName() + "] set as leaderboards channel.", 1);
+        }
+        if (subChannel != null) {
+            Data.setSubmissionsChannel(subChannel);
+            Logger.log("[+] Channel [" + subChannel.getName() + "] set as submissions channel.", 1);
+        }
+        if (mapartChannel != null) {
+            Data.setMapartChannel(mapartChannel);
+            Logger.log("[+] Channel [" + mapartChannel.getName() + "] set as mapart channel.", 1);
+        }
+
+        if (eventChannel != null || lbChannel != null || subChannel != null || mapartChannel != null) {
+            EmbedBuilder eb = new EmbedBuilder()
+                    .setTitle("[RB] Admin")
+                    .setDescription("Event config updated.");
+            new EmbedUtil().ReplyEmbed(event, eb, true, false);
+        } else {
+            EmbedBuilder eb = new EmbedBuilder()
+                    .setTitle("[RB] Admin")
+                    .setDescription("Failed to update event config!");
+            new EmbedUtil().ReplyEmbed(event, eb, true, true);
+        }
+    }
+
     static void HandleDebug (SlashCommandInteraction event) {
-        Data.SetDebug(!Data.GetDebug());
+        Data.setDebug(!Data.getDebug());
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Admin")
-                .setDescription("Set config.debug to `" + Data.GetDebug() + "`");
+                .setDescription("Set config.debug to `" + Data.getDebug() + "`");
         new EmbedUtil().ReplyEmbed(event, eb, true, false);
-        Logger.log("[+] DEBUG set to [" + Data.GetDebug() + "].", 1);
+        Logger.log("[+] DEBUG set to [" + Data.getDebug() + "].", 1);
     }
 }

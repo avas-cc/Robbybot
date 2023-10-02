@@ -2,7 +2,6 @@ package cc.avas.robbybot.utils.listeners;
 
 import cc.avas.robbybot.general.RemindmeHandler;
 import cc.avas.robbybot.moderation.MuteHandler;
-import cc.avas.robbybot.tickets.TicketHandler;
 import cc.avas.robbybot.utils.handlers.CommandHandler;
 import cc.avas.robbybot.utils.data.Data;
 import cc.avas.robbybot.utils.Logger;
@@ -19,11 +18,10 @@ public class BotEvent extends ListenerAdapter {
         Logger.Load();
         Logger.log("[+] Logger loaded.", 1);
 
-        new Data().Load();
+        new Data().load();
         new SQL().Load();
 
         MuteHandler.Load(event.getJDA());
-        TicketHandler.LoadTickets();
         RemindmeHandler.Load(event.getJDA());
     }
 

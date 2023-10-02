@@ -21,7 +21,7 @@ public class MuteHandler {
         // Get data
         Role mutedRole = event.getGuild().getRolesByName("Muted", true).get(0);
 
-        Guild guild = Data.GetGuildPublic(event.getJDA());
+        Guild guild = Data.getGuild(event.getJDA());
         Member member = event.getOption("user").getAsMember();
         User user = event.getOption("user").getAsUser();
         User modUser = event.getUser();
@@ -166,7 +166,7 @@ public class MuteHandler {
     }
 
     public static void Load (JDA jda) {
-        Guild guild = Data.GetGuildPublic(jda);
+        Guild guild = Data.getGuild(jda);
         Role mutedRole = guild.getRolesByName("Muted", true).get(0);
 
         List<String> mutes = new MuteSQL().GetMutes();

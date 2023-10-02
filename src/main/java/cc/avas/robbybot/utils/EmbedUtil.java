@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 
@@ -48,6 +49,6 @@ public class EmbedUtil {
     public void ModLogEmbed (JDA jda, EmbedBuilder eb, boolean good) {
         if(!good) eb.setColor(Color.RED);
         else eb.setColor(Color.GREEN);
-        try { Data.GetModLogChannel(jda).sendMessageEmbeds(eb.build()).queue(); } catch (Exception ignored) {}
+        try { Data.getModLogChannel(jda).sendMessageEmbeds(eb.build()).queue(); } catch (Exception ignored) {}
     }
 }

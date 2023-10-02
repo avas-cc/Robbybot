@@ -48,21 +48,6 @@ public class SQL {
         stmt.execute(sql);
 
         sql = """
-                CREATE TABLE IF NOT EXISTS tickets (
-                    id integer NOT NULL,
-                    title text NOT NULL,
-                    category integer NOT NULL,
-                    priority integer NOT NULL,
-                    status integer NOT NULL,
-                    assignee text,
-                    lastUpdated long,
-                    channelId text,
-                    infoEmbedId text,
-                    trackerEmbedId text
-                );""";
-        stmt.execute(sql);
-
-        sql = """
                 CREATE TABLE IF NOT EXISTS reminders (
                     id integer PRIMARY KEY,
                     userId text NOT NULL,

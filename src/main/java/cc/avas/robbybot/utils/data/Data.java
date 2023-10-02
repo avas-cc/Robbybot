@@ -15,7 +15,7 @@ public class Data {
     private static Config config = new Config();
     final static File configFile = new File("./data/config.json");
 
-    public void Load () {
+    public void load() {
         //Validate path
         new File("./data").mkdir();
 
@@ -23,7 +23,7 @@ public class Data {
         if (!configFile.exists()) {
             try {
                 configFile.createNewFile();
-                Save();
+                save();
                 Logger.log("[+] config.json successfully created.", 1);
             }
             catch (IOException e) { Logger.log("[-] Failed to build config.json!\n" + e, 1); }
@@ -37,7 +37,7 @@ public class Data {
         catch (IOException e) {Logger.log("[-] Failed to load config.json!\n" + e, 1); }
     }
 
-    public static void Save () {
+    public static void save() {
         ObjectMapper mapper = new ObjectMapper();
         try {
             mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, config);
@@ -46,26 +46,8 @@ public class Data {
         }
     }
 
-    // Public guild
-    public static Guild GetGuildPublic (JDA jda) {
-        return jda.getGuildById(config.getGuildPublic());
-    }
-
-    public static void SetGuildPublic (Guild guild) {
-        config.setGuildPublic(guild.getId()); Save();
-    }
-
-    // Private guild
-    public static Guild GetGuildPrivate (JDA jda) {
-        return jda.getGuildById(config.getGuildPrivate());
-    }
-
-    public static void SetGuildPrivate (Guild guild) {
-        config.setGuildPrivate(guild.getId()); Save();
-    }
-
     // Mod roles
-    public static ArrayList<Role> GetModRoles (JDA jda) {
+    public static ArrayList<Role> getModRoles(JDA jda) {
         ArrayList<Role> roles = new ArrayList<>();
         String modRoles = config.getModRoles();
         if (modRoles.equals("")) return roles;
@@ -76,7 +58,7 @@ public class Data {
         return roles;
     }
 
-    public static void SetModRole (ArrayList<Role> roles) {
+    public static void setModRole(ArrayList<Role> roles) {
         String blob = "";
 
         if (roles.size() > 0) {
@@ -84,76 +66,73 @@ public class Data {
             blob = blob.substring(0, blob.length() - 1);
         }
         config.setModRoles(blob);
-        Save();
+        save();
     }
 
     // Mod log
-    public static TextChannel GetModLogChannel (JDA jda) {
+    public static TextChannel getModLogChannel(JDA jda) {
         return jda.getTextChannelById(config.getModChannel());
     }
 
-    public static void SetModLogChannel (TextChannel channel) {
-        config.setModChannel(channel.getId()); Save();
+    public static void setModLogChannel(TextChannel channel) {
+        config.setModChannel(channel.getId()); save();
     }
 
-    // Data channels
-    public static TextChannel GetDataPublicChannel (JDA jda) {
-        return jda.getTextChannelById(config.getDataPublicChannel());
-    }
+    // Guild
+    public static Guild getGuild(JDA jda) { return jda.getGuildById(config.getGuildID()); }
 
-    public static void SetDataPublicChannel (TextChannel channel) {
-        config.setDataPublicChannel(channel.getId()); Save();
-    }
-
-    public static TextChannel GetDataPrivateChannel (JDA jda) {
-        return jda.getTextChannelById(config.getDataPrivateChannel());
-    }
-
-    public static void SetDataPrivateChannel (TextChannel channel) {
-        config.setDataPrivateChannel(channel.getId()); Save();
-    }
-
-    // FAQ
-    public static int GetFAQDays () {
-        return config.getFaqDays();
-    }
-
-    public static void SetFAQDays (int days) {
-        config.setFaqDays(days); Save();
+    public static void setGuildID(Guild guild) {
+        config.setGuildID(guild.getId()); save();
     }
 
     // Poll
-    public static Role GetPollRole (JDA jda) {
+    public static Role getPollRole(JDA jda) {
         return jda.getRoleById(config.getPollRole());
     }
 
-    public static void SetPollRole (Role role) {
-        config.setPollRole(role.getId()); Save();
+    public static void setPollRole(Role role) {
+        config.setPollRole(role.getId()); save();
     }
 
-    public static TextChannel GetPollChannel (JDA jda) {
+    public static TextChannel getPollChannel(JDA jda) {
         return jda.getTextChannelById(config.getPollChannel());
     }
 
-    public static void SetPollChannel (TextChannel channel) {
-        config.setPollChannel(channel.getId()); Save();
+    public static void setPollChannel(TextChannel channel) {
+        config.setPollChannel(channel.getId()); save();
     }
 
-    // Ticket count
-    public static int GetTicketCount () {
-        return config.getTicketCount();
+    // Events
+    public static TextChannel getEventChannel (JDA jda) { return jda.getTextChannelById(config.getEventsChannel()); }
+
+    public static void setEventsChannel (TextChannel channel) {
+        config.setEventsChannel(channel.getId()); save();
     }
 
-    public static void SetTicketCount (int count) { //kind of stupid but whatever
-        config.setTicketCount(count); Save();
+    public static TextChannel getLeaderboardsChannel (JDA jda) { return jda.getTextChannelById(config.getLeaderboardsChannel()); }
+
+    public static void setLeaderboardsChannel (TextChannel channel) {
+        config.setLeaderboardsChannel(channel.getId()); save();
+    }
+
+    public static TextChannel getSubmissionsChannel (JDA jda) { return jda.getTextChannelById(config.getSubmissionsChannel()); }
+
+    public static void setSubmissionsChannel (TextChannel channel) {
+        config.setSubmissionsChannel(channel.getId()); save();
+    }
+
+    public static TextChannel getMapartChannel (JDA jda) { return jda.getTextChannelById(config.getMapartChannel()); }
+
+    public static void setMapartChannel (TextChannel channel) {
+        config.setMapartChannel(channel.getId()); save();
     }
 
     // Debug
-    public static boolean GetDebug () {
+    public static boolean getDebug() {
         return config.isDebug();
     }
 
-    public static void SetDebug (boolean set) {
-        config.setDebug(set); Save();
+    public static void setDebug(boolean set) {
+        config.setDebug(set); save();
     }
 }

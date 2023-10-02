@@ -29,9 +29,9 @@ public class PollHandler {
     public static void Handle(SlashCommandInteraction event) throws ExecutionException, InterruptedException {
         // Check for role and channel
         TextChannel pollChannel = null;
-        try { pollChannel = Data.GetPollChannel(event.getJDA()); } catch (Exception ignored) {}
+        try { pollChannel = Data.getPollChannel(event.getJDA()); } catch (Exception ignored) {}
         Role pollRole = null;
-        try { pollRole = Data.GetPollRole(event.getJDA()); } catch (Exception ignored) {}
+        try { pollRole = Data.getPollRole(event.getJDA()); } catch (Exception ignored) {}
 
         EmbedUtil embedUtil = new EmbedUtil();
         if(pollChannel == null) {
