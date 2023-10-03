@@ -25,10 +25,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -87,8 +84,6 @@ public class MACManager {
 
         Event newEvent = new Event(eventID, endTimestamp);
         EventManager.runningEvent = newEvent;
-
-        System.out.println("Start: " + newEvent.getStart() + "\nEnd: " + newEvent.getEnd());
 
         // Private submissions channel
         Guild guild = Data.getGuild(jda);
@@ -180,15 +175,7 @@ public class MACManager {
             }
         };
 
-        LocalDateTime dateTime = LocalDateTime.now();
-        ZoneId zoneId = ZoneId.of("America/Chicago");
-        ZonedDateTime zonedDateTime = dateTime.atZone(zoneId);
-        long start = zonedDateTime.toInstant().toEpochMilli();
-
-        start = System.currentTimeMillis();
-
-        System.out.println("Starting timer: " + (EventManager.runningEvent.getEnd() - start));
-        submissionPeriodTimer.schedule(task, EventManager.runningEvent.getEnd() - start);
+        submissionPeriodTimer.schedule(task, EventManager.runningEvent.getEnd() - System.currentTimeMillis());
     }
 
     public static void addEntry (SlashCommandInteraction event) {
@@ -245,6 +232,10 @@ public class MACManager {
     public static void vote (ButtonInteractionEvent event) {
         // if too new fuckem
         long joinTime = event.getMember().getTimeJoined().toInstant().toEpochMilli();
+        Instant joinInstant = Instant.ofEpochMilli(joinTime);
+        ZonedDateTime joinCST = joinInstant.atZone(ZoneId.of("America/Chicago"));
+        joinTime = joinCST.toInstant().toEpochMilli();
+
         if (joinTime > EventManager.runningEvent.getStart()) {
             EmbedBuilder eb = new EmbedBuilder()
                     .setTitle("[RB] Mapart Contest")
@@ -301,7 +292,7 @@ public class MACManager {
 
         EmbedBuilder eb = new EmbedBuilder()
                 .setTitle("[RB] Mapart Contest Information")
-                .setDescription("**Voting has started!** Cast your vote in #submissions!\n\n**Voting Rules**:\n- 1 vote per user (can be changed at any time)\n- Must have joined before the event was announced\n\nThe voting period is 24 hours, after which the winners will be announced.\n\n**NOTE:** If you can't see the submissions, try restarting Discord sorry this platforms so shit");
+                .setDescription("**Voting has started!** Cast your vote in #submissions!\n\n**Voting Rules**:\n- 1 vote per user (can be changed at any time)\n- Must have joined before the event was announced\n\nThe voting period is 24 hours, after which the winners will be announced.\n\n**NOTE:** If you can't see the submissions, press `ctrl (cmd) + r` to refresh your Discord cache");
 
         MessageAction action = eventsChannel.sendMessageEmbeds(eb.build());
         action.submit().whenComplete((v, error) -> {
@@ -336,6 +327,7 @@ public class MACManager {
 
     public static void stopEvent(JDA jda) throws ExecutionException, InterruptedException {
         EventManager.runningEvent = null;
+        VoteManager.resetVotes();
 
         if (entries.size() == 0) {
             clearChannel(Data.getEventChannel(jda));
@@ -399,6 +391,7 @@ public class MACManager {
             i++;
         }
 
+        entries = new ArrayList<>();
         clearChannel(Data.getSubmissionsChannel(jda));
     }
 

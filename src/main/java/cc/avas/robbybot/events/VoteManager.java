@@ -7,6 +7,8 @@ public class VoteManager {
 
     static List<Vote> votesCast = new ArrayList<>();
 
+    public static void resetVotes() { votesCast = new ArrayList<>(); }
+
     public static class Vote {
         long discordID;
         long messageID;

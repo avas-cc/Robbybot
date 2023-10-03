@@ -32,11 +32,7 @@ public class EventManager {
             this.event = event;
             this.end = endTimestamp;
             this.voting = false;
-
-            LocalDateTime dateTime = LocalDateTime.now();
-            ZoneId zoneId = ZoneId.of("America/Chicago");
-            ZonedDateTime zonedDateTime = dateTime.atZone(zoneId);
-            this.start = zonedDateTime.toInstant().toEpochMilli();
+            this.start = Instant.now().atZone(ZoneId.of("America/Chicago")).toInstant().toEpochMilli();
         }
 
         public int getEvent() { return this.event; }
@@ -143,11 +139,11 @@ public class EventManager {
         switch (runningEvent.getEvent()) {
             case 1 -> {
                 try {
-                    MACManager.stopEvent(event.getJDA());
                     EmbedBuilder eb = new EmbedBuilder()
                             .setTitle("[RB] Event Manager")
                             .setDescription("Stopping event - might take a minute..");
                     new EmbedUtil().ReplyEmbed(event, eb, true, true);
+                    MACManager.stopEvent(event.getJDA());
                 }
                 catch (Exception e) {
                     EmbedBuilder eb = new EmbedBuilder()
